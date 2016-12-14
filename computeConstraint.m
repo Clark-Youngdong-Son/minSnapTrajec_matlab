@@ -95,9 +95,7 @@ end
 % C3 = zeros(2*m*k_psi,n*(order+1)*m);
 % for h=1:k_psi
 %    
-    
-    
-end
+%end
 
 % C = [C1; C2; C3];
 % b = [b1; b2; b3];
