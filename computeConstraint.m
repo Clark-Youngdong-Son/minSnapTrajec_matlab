@@ -61,44 +61,172 @@ for i=1:m
 end
 
 
-% Continuity of derivatives
-% b2 = zeros(2*m*(n-1)*k_r,1);
-% C2 = zeros(2*m*(n-1)*k_r,n*(order+1)*m);
-% constraintData_r = zeros(m,k_r,3);
-% constraintData_r(:,1,1:2) = 2;
-% for i=1:m
-%     for h=1:k_r
-%         if(i==1)
-%             c = zeros(1,n*(order+1)*m); %Will be a row vector of C
-%             values = zeros(1,order+1);
-%             for j=1:order+1
-%                 tempCoeffs = computeMat(j,:);
-%                 for k=1:h
-%                     tempCoeffs = polyder(tempCoeffs);
-%                 end
-%                 values(j) = polyval(tempCoeffs,t(i));
-%             end
-%             values = repmat(values,1,n-1);%x,y,z  -  (yaw)
-%             c( ((i-1)*(order+1)*n+1) : (i*(order+1)*n-(order+1))) = values;
-%             C2(2*((i-1)+(h-1))+1,:) = c;
-%             b2(2*(n-1)*(i-1)+1) = constraintData_r(i,h,1); %x
-%             b2(2*(n-1)*(i-1)+2) = constraintData_r(i,h,2); %y
-%             b2(2*(n-1)*(i-1)+3) = constraintData_r(i,h,3); %z
-%         
-%         else
-%             
-%         end
-%     end
-% end
-% 
-% b3 = zeros(2*m*k_psi,1);
-% C3 = zeros(2*m*k_psi,n*(order+1)*m);
-% for h=1:k_psi
-%    
-%end
+% Derivative constraints
 
+% Position
+C2 = zeros(2*m*(n-1)*k_r,n*(order+1)*m);                    %(n-1) : yaw excluded here
+b2 = zeros(2*m*(n-1)*k_r,1);
+constraintData;
+%constraintData_r = zeros(m,k_r,3);
+for i=1:m
+    for h=1:k_r
+        if(i==1)
+            %Initial
+            values = zeros(1,order+1);
+            for j=1:order+1
+                tempCoeffs = computeMat(j,:);
+                for k=1:h
+                    tempCoeffs = polyder(tempCoeffs);
+                end
+                values(j) = polyval(tempCoeffs,t(i));
+            end
+            
+            for k=1:n-1
+                if(constraintData_r(i,h,k)==eps)
+                    %Continuity
+                    break;
+                end
+                c = zeros(1,n*(order+1)*m);
+                c( ((i-1)*(order+1)*n+(k-1)*(order+1)+1) : ((i-1)*(order+1)*n+(k-1)*(order+1))+order+1) = values;
+                C2(k + (h-1)*(n-1),:) = c;
+                b2(k + (h-1)*(n-1)) = constraintData_r(i,h,k);
+            end
+        
+            %Final
+            values = zeros(1,order+1);
+            for j=1:order+1
+                tempCoeffs = computeMat(j,:);
+                for k=1:h
+                    tempCoeffs = polyder(tempCoeffs);
+                end
+                values(j) = polyval(tempCoeffs,t(m+1));
+            end
+            
+            for k=1:n-1
+                if(constraintData_r(i,h,k)==eps)
+                    %Continuity
+                    break;
+                end
+                c = zeros(1,n*(order+1)*m);
+                c( ((m-1)*(order+1)*n+(k-1)*(order+1)+1) : ((m-1)*(order+1)*n+(k-1)*(order+1))+order+1) = values;
+                C2(k + (h-1)*(n-1) + (n-1)*k_r,:) = c;
+                b2(k + (h-1)*(n-1) + (n-1)*k_r) = constraintData_r(i,h,k);
+            end
+
+        else
+            
+            %Elsewhere
+            values = zeros(1,order+1);
+            for j=1:order+1
+                tempCoeffs = computeMat(j,:);
+                for k=1:h
+                    tempCoeffs = polyder(tempCoeffs);
+                end
+                values(j) = polyval(tempCoeffs,t(i));
+            end
+            
+            for k=1:n-1
+                if(constraintData_r(i,h,k)==eps)
+                    %Continuity
+                    break;
+                end
+                c = zeros(1,n*(order+1)*m);
+                c( ((i-2)*(order+1)*n+(k-1)*(order+1)+1) : ((i-2)*(order+1)*n+(k-1)*(order+1))+order+1) = values;
+                C2(k + (h-1)*(n-1) + 2*(i-1)*(n-1)*k_r,:) = c;
+                b2(k + (h-1)*(n-1) + 2*(i-1)*(n-1)*k_r) = constraintData_r(i,h,k);
+            end
+            
+            for k=1:n-1
+                if(constraintData_r(i,h,k)==eps)
+                    %Continuity
+                    break;
+                end
+                c = zeros(1,n*(order+1)*m);
+                c( ((i-1)*(order+1)*n+(k-1)*(order+1)+1) : ((i-1)*(order+1)*n+(k-1)*(order+1))+order+1) = values;
+                C2(k + (h-1)*(n-1) + 2*(i-1)*(n-1)*k_r + (n-1)*k_r,:) = c;
+                b2(k + (h-1)*(n-1) + 2*(i-1)*(n-1)*k_r + (n-1)*k_r) = constraintData_r(i,h,k);
+            end
+            
+        end
+    end
+end
+
+
+% % % % % % % Yaw
+% % % % % % C3 = zeros(2*m*k_psi,n*(order+1)*m);                    %(n-1) : yaw excluded here
+% % % % % % b3 = zeros(2*m*k_psi,1);
+% % % % % % constraintData;
+% % % % % % 
+% % % % % % for i=1:m
+% % % % % %     for h=1:k_psi
+% % % % % %         if(i==1)
+% % % % % %             %Initial
+% % % % % %             values = zeros(1,order+1);
+% % % % % %             for j=1:order+1
+% % % % % %                 tempCoeffs = computeMat(j,:);
+% % % % % %                 for k=1:h
+% % % % % %                     tempCoeffs = polyder(tempCoeffs);
+% % % % % %                 end
+% % % % % %                 values(j) = polyval(tempCoeffs,t(i));
+% % % % % %             end
+% % % % % %             
+% % % % % %             for k=1:1
+% % % % % %                 c = zeros(1,n*(order+1)*m);
+% % % % % %                 c( ((i-1)*(order+1)*n+(k+3-1)*(order+1)+1) : ((i-1)*(order+1)*n+(k+3-1)*(order+1))+order+1) = values;
+% % % % % %                 C3(k + (h-1)*(1),:) = c;
+% % % % % %                 b3(k + (h-1)*(1)) = constraintData_r(i,h,k);
+% % % % % %             end
+% % % % % %         
+% % % % % %             %Final
+% % % % % %             values = zeros(1,order+1);
+% % % % % %             for j=1:order+1
+% % % % % %                 tempCoeffs = computeMat(j,:);
+% % % % % %                 for k=1:h
+% % % % % %                     tempCoeffs = polyder(tempCoeffs);
+% % % % % %                 end
+% % % % % %                 values(j) = polyval(tempCoeffs,t(m+1));
+% % % % % %             end
+% % % % % %             
+% % % % % %             for k=1:1
+% % % % % %                 c = zeros(1,n*(order+1)*m);
+% % % % % %                 c( ((m-1)*(order+1)*n+(k+3-1)*(order+1)+1) : ((m-1)*(order+1)*n+(k+3-1)*(order+1))+order+1) = values;
+% % % % % %                 C3(k + (h-1)*(1) + (1)*k_r,:) = c;
+% % % % % %                 b3(k + (h-1)*(1) + (1)*k_r) = constraintData_r(m,h,k);
+% % % % % %             end
+% % % % % % 
+% % % % % %         else
+% % % % % %             
+% % % % % %             %Elsewhere
+% % % % % % %             values = zeros(1,order+1);
+% % % % % % %             for j=1:order+1
+% % % % % % %                 tempCoeffs = computeMat(j,:);
+% % % % % % %                 for k=1:h
+% % % % % % %                     tempCoeffs = polyder(tempCoeffs);
+% % % % % % %                 end
+% % % % % % %                 values(j) = polyval(tempCoeffs,t(i));
+% % % % % % %             end
+% % % % % % %             
+% % % % % % %             for k=1:1
+% % % % % % %                 c = zeros(1,n*(order+1)*m);
+% % % % % % %                 c( ((i-2)*(order+1)*n+(k+3-1)*(order+1)+1) : ((i-2)*(order+1)*n+(k+3-1)*(order+1))+order+1) = values;
+% % % % % % %                 C3(k + (h-1)*(1) + 2*(i-1)*(1)*k_r,:) = c;
+% % % % % % %                 b3(k + (h-1)*(1) + 2*(i-1)*(1)*k_r) = constraintData_r(i,h,k);
+% % % % % % %             end
+% % % % % % %             
+% % % % % % %             for k=1:1
+% % % % % % %                 c = zeros(1,n*(order+1)*m);
+% % % % % % %                 c( ((i-1)*(order+1)*n+(k+3-1)*(order+1)+1) : ((i-1)*(order+1)*n+(k+3-1)*(order+1))+order+1) = values;
+% % % % % % %                 C3(k + (h-1)*(1) + 2*(i-1)*(1)*k_r + (1)*k_r,:) = c;
+% % % % % % %                 b3(k + (h-1)*(1) + 2*(i-1)*(1)*k_r + (1)*k_r) = constraintData_r(i,h,k);
+% % % % % % %             end
+% % % % % %             
+% % % % % %         end
+% % % % % %     end
+% % % % % % end
+% C = C1; % #:32
+% b = b1;
+C = [C1; C2]; % #:128
+b = [b1; b2];
 % C = [C1; C2; C3];
 % b = [b1; b2; b3];
-C = C1;
-b = b1;
 end

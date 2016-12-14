@@ -21,9 +21,9 @@ subplot(4,1,2); plot(time,y_trajec,'-k'); ylabel('y'); hold on;
 subplot(4,1,3); plot(time,z_trajec,'-k'); ylabel('z'); hold on;
 subplot(4,1,4); plot(time,psi_trajec,'-k'); xlabel('time'); ylabel('\psi'); hold on;
 
-for i=1:size(keyframe,2)-1
-    subplot(4,1,1); plot(t(i+1),keyframe(1,i+1),'or','MarkerFaceColor','r');
-    subplot(4,1,2); plot(t(i+1),keyframe(2,i+1),'or','MarkerFaceColor','r');
-    subplot(4,1,3); plot(t(i+1),keyframe(3,i+1),'or','MarkerFaceColor','r');
-    subplot(4,1,4); plot(t(i+1),keyframe(4,i+1),'or','MarkerFaceColor','r');
+for i=1:size(keyframe,2)
+    subplot(4,1,1); plot(t(i),keyframe(1,i),'or','MarkerFaceColor','r');
+    subplot(4,1,2); plot(t(i),keyframe(2,i),'or','MarkerFaceColor','r');
+    subplot(4,1,3); plot(t(i),keyframe(3,i),'or','MarkerFaceColor','r');
+    subplot(4,1,4); plot(t(i),keyframe(4,i),'or','MarkerFaceColor','r');
 end
