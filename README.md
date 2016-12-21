@@ -1,5 +1,5 @@
 # minSnapTrajec_matlab
-MATLAB simulation for the paper 'Minimum snap trajectory generation and control for quadrotors
+MATLAB simulation for the paper 'Minimum snap trajectory generation and control for quadrotors'
 
 ICSL drone flight project team
 
