@@ -11,7 +11,7 @@ t_f = 10;                               %final time of the simulation
 
 keyframe_selection_flag = true;         %true : select manually, false : use the given test data
 if(keyframe_selection_flag)
-    m = 4;                              %number of keyframes
+    m = 6;                              %number of keyframes
 end
 
 order = 6;                              %order of polynomial functions
