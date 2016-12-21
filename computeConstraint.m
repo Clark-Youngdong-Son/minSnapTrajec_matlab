@@ -65,7 +65,7 @@ end
 
 % Position
 C2 = zeros(2*m*(n-1)*k_r,n*(order+1)*m);                    %(n-1) : yaw excluded here
-b2 = zeros(2*m*(n-1)*k_r,1);
+b2 = ones(2*m*(n-1)*k_r,1)*eps;
 constraintData;
 %constraintData_r = zeros(m,k_r,3);
 for i=1:m
@@ -81,15 +81,24 @@ for i=1:m
                 values(j) = polyval(tempCoeffs,t(i));
             end
             
+            continuity = zeros(1,n-1);
             for k=1:n-1
                 if(constraintData_r(i,h,k)==eps)
                     %Continuity
-                    break;
+                    continuity(k) = true;
                 end
+                
                 c = zeros(1,n*(order+1)*m);
-                c( ((i-1)*(order+1)*n+(k-1)*(order+1)+1) : ((i-1)*(order+1)*n+(k-1)*(order+1))+order+1) = values;
-                C2(k + (h-1)*(n-1),:) = c;
-                b2(k + (h-1)*(n-1)) = constraintData_r(i,h,k);
+                if(continuity(k))
+                    c( ((i-1)*(order+1)*n+(k-1)*(order+1)+1) : ((i-1)*(order+1)*n+(k-1)*(order+1))+order+1) = values;
+                    c( ((m-1)*(order+1)*n+(k-1)*(order+1)+1) : ((m-1)*(order+1)*n+(k-1)*(order+1))+order+1) = -values;
+                    C2(k + (h-1)*(n-1),:) = c;
+                    b2(k + (h-1)*(n-1)) = 0; 
+                else
+                    c( ((i-1)*(order+1)*n+(k-1)*(order+1)+1) : ((i-1)*(order+1)*n+(k-1)*(order+1))+order+1) = values;
+                    C2(k + (h-1)*(n-1),:) = c;
+                    b2(k + (h-1)*(n-1)) = constraintData_r(i,h,k); 
+                end
             end
         
             %Final
@@ -105,12 +114,13 @@ for i=1:m
             for k=1:n-1
                 if(constraintData_r(i,h,k)==eps)
                     %Continuity
-                    break;
                 end
                 c = zeros(1,n*(order+1)*m);
-                c( ((m-1)*(order+1)*n+(k-1)*(order+1)+1) : ((m-1)*(order+1)*n+(k-1)*(order+1))+order+1) = values;
-                C2(k + (h-1)*(n-1) + (n-1)*k_r,:) = c;
-                b2(k + (h-1)*(n-1) + (n-1)*k_r) = constraintData_r(i,h,k);
+                if(~continuity(k))
+                    c( ((m-1)*(order+1)*n+(k-1)*(order+1)+1) : ((m-1)*(order+1)*n+(k-1)*(order+1))+order+1) = values;
+                    C2(k + (h-1)*(n-1) + (n-1)*k_r,:) = c;
+                    b2(k + (h-1)*(n-1) + (n-1)*k_r) = constraintData_r(i,h,k);
+                end
             end
 
         else
@@ -125,26 +135,40 @@ for i=1:m
                 values(j) = polyval(tempCoeffs,t(i));
             end
             
+            continuity = zeros(1,n-1);
             for k=1:n-1
                 if(constraintData_r(i,h,k)==eps)
                     %Continuity
-                    break;
+                    continuity(k) = true;
                 end
+                
                 c = zeros(1,n*(order+1)*m);
-                c( ((i-2)*(order+1)*n+(k-1)*(order+1)+1) : ((i-2)*(order+1)*n+(k-1)*(order+1))+order+1) = values;
-                C2(k + (h-1)*(n-1) + 2*(i-1)*(n-1)*k_r,:) = c;
-                b2(k + (h-1)*(n-1) + 2*(i-1)*(n-1)*k_r) = constraintData_r(i,h,k);
+                if(continuity(k))
+                    c( ((i-2)*(order+1)*n+(k-1)*(order+1)+1) : ((i-2)*(order+1)*n+(k-1)*(order+1))+order+1) = values;
+                    c( ((i-1)*(order+1)*n+(k-1)*(order+1)+1) : ((i-1)*(order+1)*n+(k-1)*(order+1))+order+1) = -values;
+                    C2(k + (h-1)*(n-1) + 2*(i-1)*(n-1)*k_r,:) = c;
+                    b2(k + (h-1)*(n-1) + 2*(i-1)*(n-1)*k_r) = 0;
+                else
+                    c( ((i-2)*(order+1)*n+(k-1)*(order+1)+1) : ((i-2)*(order+1)*n+(k-1)*(order+1))+order+1) = values;
+                    C2(k + (h-1)*(n-1) + 2*(i-1)*(n-1)*k_r,:) = c;
+                    b2(k + (h-1)*(n-1) + 2*(i-1)*(n-1)*k_r) = constraintData_r(i,h,k);
+                end
             end
             
+            continuity = zeros(1,n-1);
             for k=1:n-1
                 if(constraintData_r(i,h,k)==eps)
                     %Continuity
-                    break;
+                    continuity(k) = true;
                 end
                 c = zeros(1,n*(order+1)*m);
-                c( ((i-1)*(order+1)*n+(k-1)*(order+1)+1) : ((i-1)*(order+1)*n+(k-1)*(order+1))+order+1) = values;
-                C2(k + (h-1)*(n-1) + 2*(i-1)*(n-1)*k_r + (n-1)*k_r,:) = c;
-                b2(k + (h-1)*(n-1) + 2*(i-1)*(n-1)*k_r + (n-1)*k_r) = constraintData_r(i,h,k);
+                
+                if(~continuity(k))
+                    c( ((i-1)*(order+1)*n+(k-1)*(order+1)+1) : ((i-1)*(order+1)*n+(k-1)*(order+1))+order+1) = values;
+                    C2(k + (h-1)*(n-1) + 2*(i-1)*(n-1)*k_r + (n-1)*k_r,:) = c;
+                    b2(k + (h-1)*(n-1) + 2*(i-1)*(n-1)*k_r + (n-1)*k_r) = constraintData_r(i,h,k);
+                end
+                
             end
             
         end

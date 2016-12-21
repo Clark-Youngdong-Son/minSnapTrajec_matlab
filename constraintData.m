@@ -6,12 +6,14 @@ constraintData_r = zeros(m,k_r,3);
 %velocity
 if(k_r>=1)
     constraintData_r(1,1,1:3) = 0;          %At starting position
-    constraintData_r(2:m,1,1:2) = 1.5;      %x,y velocities
-    constraintData_r(2:m,1,3) = 1.5;        %z velocity
+    constraintData_r(2:m,1,1:2) = eps;      %x,y velocities
+    constraintData_r(2:m,1,3) = eps;        %z velocity
 end
 %acceleration
 if(k_r>=2)
     constraintData_r(1,2,3) = 0;            %At starting position
+    constraintData_r(2:m,2,1:2) = eps;      %x,y accelerations
+    constraintData_r(2:m,2,3) = eps;        %z acceleration
 end
 %jerk
 if(k_r>=3)

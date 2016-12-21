@@ -5,7 +5,7 @@ function mouseClick2(object, eventdata)
         count = count + 1;
         C = get(gca, 'CurrentPoint');
         keyframe(3,count) = C(1,2);               %z
-        if(count == 4)
+        if(count == m)
             keyframe(:,count+1) = keyframe(:,1);  %Return to the original position
         end
         plot([-1 1],[keyframe(3,count) keyframe(3,count)], 'r-', 'LineWidth',2);
