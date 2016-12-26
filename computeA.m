@@ -55,5 +55,5 @@ for i=1:m
     end
     A = blkdiag(A,mu_r*A_x,mu_r*A_y,mu_r*A_z,mu_psi*A_psi);
 end
-
+A = 0.5*(A + A.'); %Make it symmetric
 end

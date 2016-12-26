@@ -1,4 +1,4 @@
-function [C, b] = computeConstraint(order, m, k_r, k_psi, t, keyframe)
+function [C, b, C3, b3] = computeConstraint(order, m, k_r, k_psi, t, keyframe, corridor_position, n_intermediate, corridor_width)
 
 n = 4;                              %State number
 
@@ -247,10 +247,78 @@ end
 % % % % % %         end
 % % % % % %     end
 % % % % % % end
-% C = C1; % #:32
-% b = b1;
-C = [C1; C2]; % #:128
+
+%Corridor constraints
+
+C3 = [];
+%Size (2*3*n_intermediate,n*(order+1)*m);   
+%2 : absoulute value constraint
+%3 : x,y,z
+%n_intermediate : number of intermediate points
+
+b3 = [];
+t_vector = (keyframe(1:3,corridor_position(2)) - keyframe(1:3,corridor_position(1)))...
+/norm(keyframe(1:3,corridor_position(2)) - keyframe(1:3,corridor_position(1)));
+%unit vector of direction of the corridor
+
+t_intermediate = linspace(t(corridor_position(1)),t(corridor_position(2)),n_intermediate+2);
+t_intermediate = t_intermediate(2:end-1);
+%intermediate time stamps
+
+computeMat = eye(order+1);          %Required for computation of polynomials
+for i = 1:n_intermediate
+%     intermediate_pos(1) = interp1([t(corridor_position(1)) t(corridor_position(2))],...
+%         [keyframe(1,corridor_position(1)) keyframe(1,corridor_position(2))],t_intermediate(i));
+%     intermediate_pos(2) = interp1([t(corridor_position(1)) t(corridor_position(2))],...
+%         [keyframe(2,corridor_position(1)) keyframe(2,corridor_position(2))],t_intermediate(i));
+%     intermediate_pos(3) = interp1([t(corridor_position(1)) t(corridor_position(2))],...
+%         [keyframe(3,corridor_position(1)) keyframe(3,corridor_position(2))],t_intermediate(i));
+    values = zeros(1,order+1);
+    for j=1:order+1
+        values(j) = polyval(computeMat(j,:),t_intermediate(i));
+    end
+    
+    c = zeros(6, n*(order+1)*m);       %Absolute value constraint : two inequality constraints
+    b = zeros(6, 1);
+    
+    rix = keyframe(1,corridor_position(1));
+    riy = keyframe(2,corridor_position(1));
+    riz = keyframe(3,corridor_position(1));
+    %x
+    c(1,(corridor_position(1)-1)*n*(order+1)+0*(order+1)+1:(corridor_position(1)-1)*n*(order+1)+3*(order+1))...
+        = [values zeros(1,2*(order+1))]...
+        - t_vector(1)*[t_vector(1)*values t_vector(2)*values t_vector(3)*values];
+    b(1) = corridor_width +...
+        rix+t_vector(1)*(-rix*t_vector(1) -riy*t_vector(2) -riz*t_vector(3));
+    c(2,(corridor_position(1)-1)*n*(order+1)+0*(order+1)+1:(corridor_position(1)-1)*n*(order+1)+3*(order+1))...
+        = -c(1,(corridor_position(1)-1)*n*(order+1)+0*(order+1)+1:(corridor_position(1)-1)*n*(order+1)+3*(order+1));
+    b(2) = corridor_width +...
+        -rix-t_vector(1)*(-rix*t_vector(1) -riy*t_vector(2) -riz*t_vector(3));
+    %y
+    c(3,(corridor_position(1)-1)*n*(order+1)+0*(order+1)+1:(corridor_position(1)-1)*n*(order+1)+3*(order+1))...
+        = [zeros(1,order+1) values zeros(1,order+1)]...
+        - t_vector(2)*[t_vector(1)*values t_vector(2)*values t_vector(3)*values];
+    b(3) = corridor_width +...
+        riy+t_vector(2)*(-rix*t_vector(1) -riy*t_vector(2) -riz*t_vector(3));
+    c(4,(corridor_position(1)-1)*n*(order+1)+0*(order+1)+1:(corridor_position(1)-1)*n*(order+1)+3*(order+1))...
+        = -c(3,(corridor_position(1)-1)*n*(order+1)+0*(order+1)+1:(corridor_position(1)-1)*n*(order+1)+3*(order+1));
+    b(4) = corridor_width +...
+        -riy-t_vector(2)*(-rix*t_vector(1) -riy*t_vector(2) -riz*t_vector(3));
+    %z
+    c(5,(corridor_position(1)-1)*n*(order+1)+0*(order+1)+1:(corridor_position(1)-1)*n*(order+1)+3*(order+1))...
+        = [zeros(1,2*(order+1)) values]...
+        - t_vector(3)*[t_vector(1)*values t_vector(2)*values t_vector(3)*values];
+    b(5) = corridor_width +...
+        riz+t_vector(3)*(-rix*t_vector(1) -riy*t_vector(2) -riz*t_vector(3));
+    c(6,(corridor_position(1)-1)*n*(order+1)+0*(order+1)+1:(corridor_position(1)-1)*n*(order+1)+3*(order+1))...
+        = -c(5,(corridor_position(1)-1)*n*(order+1)+0*(order+1)+1:(corridor_position(1)-1)*n*(order+1)+3*(order+1));
+    b(6) = corridor_width +...
+        -riz-t_vector(3)*(-rix*t_vector(1) -riy*t_vector(2) -riz*t_vector(3));
+    
+    C3 = [C3; c];
+    b3 = [b3; b];
+end
+
+C = [C1; C2];
 b = [b1; b2];
-% C = [C1; C2; C3];
-% b = [b1; b2; b3];
 end

@@ -10,9 +10,12 @@ A = computeA(order, m, mu_r, mu_psi, k_r, k_psi, t);
 
 %Compute the constraint function matrix, C
 % [C, b] = computeConstraint(order, m, k_r, k_psi, t, keyframe);
-[C, b] = computeConstraint(order, m, 3, 2, t, keyframe);
+[C, b, Cin, bin] = computeConstraint(order, m, 3, 2, t, keyframe, corridor_position, n_intermediate, corridor_width);
 
-options = optimoptions('quadprog', 'Display', 'iter-detailed', 'MaxIterations', 2000);
+options = optimoptions('quadprog', 'Display', 'iter', 'MaxIterations', 4000);
+tic;
+solution_corridor = quadprog(2*A, [], Cin, bin, C, b, [], [], [], options);
+toc;
 tic;
 solution = quadprog(2*A, [], [], [], C, b, [], [], [], options);
 toc;
